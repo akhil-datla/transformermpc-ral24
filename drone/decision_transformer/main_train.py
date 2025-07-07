@@ -10,6 +10,7 @@ from decision_transformer.art import AutonomousQuadTransformer
 import torch
 import decision_transformer.manage as ART_manager
 from decision_transformer.manage import device
+from dynamics.losses import physics_based_loss
 from optimization.quad_scenario import dataset_scenario
 
 # Initial parameters
@@ -21,6 +22,7 @@ n_state = train_loader.dataset.n_state
 n_data = train_loader.dataset.n_data
 n_action = train_loader.dataset.n_action
 n_time = train_loader.dataset.max_len
+data_stats = train_loader.dataset.data_stats
 
 # Transformer parameters
 config = DecisionTransformerConfig(
@@ -88,7 +90,7 @@ def evaluate():
                 return_dict=False,
             )
         loss_i = torch.mean((action_preds - actions_i) ** 2)
-        loss_i_state = torch.mean((state_preds[:,:-1,:] - states_i[:,1:,:]) ** 2)
+        loss_i_state = physics_based_loss(states_i, action_preds, data_stats)
         losses.append(accelerator.gather(loss_i + loss_i_state))
         losses_state.append(accelerator.gather(loss_i_state))
         losses_action.append(accelerator.gather(loss_i))
@@ -129,7 +131,7 @@ for epoch in range(num_train_epochs):
                 return_dict=False,
             )
             loss_i_action = torch.mean((action_preds - actions_i) ** 2)
-            loss_i_state = torch.mean((state_preds[:,:-1,:] - states_i[:,1:,:]) ** 2)
+            loss_i_state = physics_based_loss(states_i, action_preds, data_stats)
             loss = loss_i_action + loss_i_state
             if step % 100 == 0:
                 accelerator.print(
