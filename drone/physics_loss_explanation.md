@@ -1,6 +1,6 @@
 # Physics Based Loss for Drone Model
 
-The original training scripts minimized the mean squared error (MSE) between the predicted states/actions and the values stored in the dataset. This commit introduces a physics based loss exploiting the quadrotor dynamics.
+The original training scripts minimized the mean squared error (MSE) between the predicted states/actions and the values stored in the dataset. The physics loss now also penalizes constraint violations using the quadrotor dynamics.
 
 ## Implementation
 
@@ -8,7 +8,7 @@ A new module `drone/dynamics/losses.py` defines utilities:
 
 - **`quad_dynamics_batch`** – computes the state derivative for a batch of states and control inputs using the point–mass model from `quad_scenario`.
 - **`rollout_with_actions`** – performs Euler integration of the dynamics for a sequence of actions.
-- **`physics_based_loss`** – unnormalizes states and predicted actions, propagates the initial state with the dynamics and computes the MSE between the propagated trajectory and the true states.
+- **`physics_based_loss`** – unnormalizes states and predicted actions, propagates the initial state with the dynamics and computes the MSE between the propagated trajectory and the true states. It also adds penalties for exceeding thrust limits and for entering obstacle keep‑out zones.
 
 Training scripts (`main_train.py` and `dagger_training.py`) import `physics_based_loss` and replace the previous state loss with this new term. Actions are still penalized with a standard MSE. Dataset statistics are retrieved from the training loader to allow unnormalization.
 
