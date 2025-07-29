@@ -57,7 +57,7 @@ def for_computation(input):
 
 if __name__ == '__main__':
 
-    N_data = 200000
+    N_data = 20000
     set_start_method('spawn')
 
     n_S = 6 # state size

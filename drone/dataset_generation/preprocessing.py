@@ -29,6 +29,8 @@ args = parser.parse_args()
 args.data_dir = root_folder + '/' + args.data_dir
 args.data_dir_torch = root_folder + '/' + args.data_dir_torch
 
+os.makedirs(args.data_dir_torch, exist_ok=True)
+
 print('Loading data...', end='')
 
 data_scp = np.load(args.data_dir + '/dataset-quad-v05-scp.npz')

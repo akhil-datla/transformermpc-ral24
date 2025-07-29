@@ -11,6 +11,7 @@ import torch
 from transformers import DecisionTransformerConfig
 import decision_transformer.manage as ART_manager
 from decision_transformer.art import AutonomousQuadTransformer
+from dynamics.losses import physics_based_loss
 from torch.optim import AdamW
 from accelerate import Accelerator
 from transformers import get_scheduler
@@ -538,7 +539,7 @@ if __name__ == '__main__':
                         return_dict=False,
                     )
                 loss_i = torch.mean((action_preds - target_actions_i.to(ART_manager.device)) ** 2)
-                loss_i_state = torch.mean((state_preds[:,:-1,:] - target_states_i.to(ART_manager.device)) ** 2)
+                loss_i_state = physics_based_loss(states_i.to(ART_manager.device), action_preds, data_stats)
                 losses_ol.append(accelerator.gather(loss_i + loss_i_state))
                 losses_state_ol.append(accelerator.gather(loss_i_state))
                 losses_action_ol.append(accelerator.gather(loss_i))
@@ -558,7 +559,7 @@ if __name__ == '__main__':
                         return_dict=False,
                     )
                 loss_i = torch.mean((action_preds - target_actions_i.to(ART_manager.device)) ** 2)
-                loss_i_state = torch.mean((state_preds[:,:-1,:] - target_states_i.to(ART_manager.device)) ** 2)
+                loss_i_state = physics_based_loss(states_i.to(ART_manager.device), action_preds, data_stats)
                 losses_cl.append(accelerator.gather(loss_i + loss_i_state))
                 losses_state_cl.append(accelerator.gather(loss_i_state))
                 losses_action_cl.append(accelerator.gather(loss_i))
@@ -600,7 +601,7 @@ if __name__ == '__main__':
                     return_dict=False,
                 )
                 loss_i_action = torch.mean((action_preds - target_actions_i.to(ART_manager.device)) ** 2)
-                loss_i_state = torch.mean((state_preds[:,:-1,:] - target_states_i.to(ART_manager.device)) ** 2)
+                loss_i_state = physics_based_loss(states_i.to(ART_manager.device), action_preds, data_stats)
                 loss = loss_i_action + loss_i_state
                 if step % 100 == 0:
                     accelerator.print(
